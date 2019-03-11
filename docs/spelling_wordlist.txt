@@ -1,0 +1,16 @@
+2018
+aixterm
+ansito
+Changelog
+conky
+fraktur
+github.com
+ISC License
+overline
+overlined
+pawamoy
+pawamoy@pm.me
+sexualized
+Timothée Mazzucotelli
+timothee.mazzucotelli@pm.me
+Translate ANSI codes to any other format.
