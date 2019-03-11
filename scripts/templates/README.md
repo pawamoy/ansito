@@ -56,14 +56,7 @@ TODO
 
 ## Usage (command-line)
 ```
-usage: ansito [-h] FILENAME
-
-positional arguments:
-  FILENAME    File to translate, or - for stdin.
-
-optional arguments:
-  -h, --help  show this help message and exit
-
+{{ command_line_help }}
 ```
 
 Example:
@@ -78,4 +71,15 @@ Real-word example with `taskwarrior` in a Conky configuration file:
 ${texecpi 60 flock ~/.task task limit:10 rc.defaultwidth:80 rc._forcecolor:on rc.verbose:affected,blank list | ansito - | sed -r 's/([^ ])#/\1\\#/g'
 ```
 
+{% if commands %}Commands:
+{% for command in commands %}
+- [`{{ command.name }}`](#{{ command.name }}){% endfor %}
 
+{% for command in commands %}
+### `{{ command.name }}`
+```
+{{ command.help }}
+```
+
+{% include "command_" + command.name.replace("-", "_") + "_extra.md" ignore missing %}
+{% endfor %}{% endif %}

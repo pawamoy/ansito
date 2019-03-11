@@ -1,4 +1,20 @@
-#!/usr/bin/env python3
+# coding=utf-8
+"""
+Module that contains the command line application.
+
+Why does this file exist, and why not put this in __main__?
+
+You might be tempted to import things from __main__ later,
+but that will cause problems: the code will get executed twice:
+
+- When you run `python -m ansito` python will execute
+  ``__main__.py`` as a script. That means there won't be any
+  ``ansito.__main__`` in ``sys.modules``.
+- When you import __main__ it will get executed again (as a module) because
+  there's no ``ansito.__main__`` in ``sys.modules``.
+
+Also see http://click.pocoo.org/5/setuptools/#setuptools-integration.
+"""
 
 # https://unix.stackexchange.com/questions/230613/how-can-i-display-Ansi-color-in-a-cli-conky-display#230706
 # http://wiki.bash-hackers.org/scripting/terminalcodes
@@ -6,53 +22,53 @@
 
 # https://www.wikiwand.com/en/Ansi_escape_code#/Colors
 
-# ╔══════════╦════════════════════════════════╦═════════════════════════════════════════════════════════════════════════╗
-# ║  Code    ║             Effect             ║                                   Note                                  ║
-# ╠══════════╬════════════════════════════════╬═════════════════════════════════════════════════════════════════════════╣
-# ║ 0        ║  Reset / Normal                ║  all attributes off                                                     ║
-# ║ 1        ║  Bold or increased intensity   ║                                                                         ║
-# ║ 2        ║  Faint (decreased intensity)   ║  Not widely supported.                                                  ║
-# ║ 3        ║  Italic                        ║  Not widely supported. Sometimes treated as inverse.                    ║
-# ║ 4        ║  Underline                     ║                                                                         ║
-# ║ 5        ║  Slow Blink                    ║  less than 150 per minute                                               ║
-# ║ 6        ║  Rapid Blink                   ║  MS-DOS Ansi.SYS; 150+ per minute; not widely supported                 ║
-# ║ 7        ║  [[reverse video]]             ║  swap foreground and background colors                                  ║
-# ║ 8        ║  Conceal                       ║  Not widely supported.                                                  ║
-# ║ 9        ║  Crossed-out                   ║  Characters legible, but marked for deletion.  Not widely supported.    ║
-# ║ 10       ║  Primary(default) font         ║                                                                         ║
-# ║ 11–19    ║  Alternate font                ║  Select alternate font `n-10`                                           ║
-# ║ 20       ║  Fraktur                       ║  hardly ever supported                                                  ║
-# ║ 21       ║  Bold off or Double Underline  ║  Bold off not widely supported; double underline hardly ever supported. ║
-# ║ 22       ║  Normal color or intensity     ║  Neither bold nor faint                                                 ║
-# ║ 23       ║  Not italic, not Fraktur       ║                                                                         ║
-# ║ 24       ║  Underline off                 ║  Not singly or doubly underlined                                        ║
-# ║ 25       ║  Blink off                     ║                                                                         ║
-# ║ 27       ║  Inverse off                   ║                                                                         ║
-# ║ 28       ║  Reveal                        ║  conceal off                                                            ║
-# ║ 29       ║  Not crossed out               ║                                                                         ║
-# ║ 30–37    ║  Set foreground color          ║  See color table below                                                  ║
-# ║ 38       ║  Set foreground color          ║  Next arguments are `5;n` or `2;r;g;b`, see below                       ║
-# ║ 39       ║  Default foreground color      ║  implementation defined (according to standard)                         ║
-# ║ 40–47    ║  Set background color          ║  See color table below                                                  ║
-# ║ 48       ║  Set background color          ║  Next arguments are `5;n` or `2;r;g;b`, see below                       ║
-# ║ 49       ║  Default background color      ║  implementation defined (according to standard)                         ║
-# ║ 51       ║  Framed                        ║                                                                         ║
-# ║ 52       ║  Encircled                     ║                                                                         ║
-# ║ 53       ║  Overlined                     ║                                                                         ║
-# ║ 54       ║  Not framed or encircled       ║                                                                         ║
-# ║ 55       ║  Not overlined                 ║                                                                         ║
-# ║ 60       ║  ideogram underline            ║  hardly ever supported                                                  ║
-# ║ 61       ║  ideogram double underline     ║  hardly ever supported                                                  ║
-# ║ 62       ║  ideogram overline             ║  hardly ever supported                                                  ║
-# ║ 63       ║  ideogram double overline      ║  hardly ever supported                                                  ║
-# ║ 64       ║  ideogram stress marking       ║  hardly ever supported                                                  ║
-# ║ 65       ║  ideogram attributes off       ║  reset the effects of all of 60-64                                      ║
-# ║ 90–97    ║  Set bright foreground color   ║  aixterm (not in standard)                                              ║
-# ║ 100–107  ║  Set bright background color   ║  aixterm (not in standard)                                              ║
-# ╚══════════╩════════════════════════════════╩═════════════════════════════════════════════════════════════════════════╝
+# ═════════╦════════════════════════════════╦═════════════════════════════════════════════════════════════════════════╗
+#  Code    ║             Effect             ║                                   Note                                  ║
+# ═════════╬════════════════════════════════╬═════════════════════════════════════════════════════════════════════════╣
+# 0        ║  Reset / Normal                ║  all attributes off                                                     ║
+# 1        ║  Bold or increased intensity   ║                                                                         ║
+# 2        ║  Faint (decreased intensity)   ║  Not widely supported.                                                  ║
+# 3        ║  Italic                        ║  Not widely supported. Sometimes treated as inverse.                    ║
+# 4        ║  Underline                     ║                                                                         ║
+# 5        ║  Slow Blink                    ║  less than 150 per minute                                               ║
+# 6        ║  Rapid Blink                   ║  MS-DOS Ansi.SYS; 150+ per minute; not widely supported                 ║
+# 7        ║  [[reverse video]]             ║  swap foreground and background colors                                  ║
+# 8        ║  Conceal                       ║  Not widely supported.                                                  ║
+# 9        ║  Crossed-out                   ║  Characters legible, but marked for deletion.  Not widely supported.    ║
+# 10       ║  Primary(default) font         ║                                                                         ║
+# 11–19    ║  Alternate font                ║  Select alternate font `n-10`                                           ║
+# 20       ║  Fraktur                       ║  hardly ever supported                                                  ║
+# 21       ║  Bold off or Double Underline  ║  Bold off not widely supported; double underline hardly ever supported. ║
+# 22       ║  Normal color or intensity     ║  Neither bold nor faint                                                 ║
+# 23       ║  Not italic, not Fraktur       ║                                                                         ║
+# 24       ║  Underline off                 ║  Not singly or doubly underlined                                        ║
+# 25       ║  Blink off                     ║                                                                         ║
+# 27       ║  Inverse off                   ║                                                                         ║
+# 28       ║  Reveal                        ║  conceal off                                                            ║
+# 29       ║  Not crossed out               ║                                                                         ║
+# 30–37    ║  Set foreground color          ║  See color table below                                                  ║
+# 38       ║  Set foreground color          ║  Next arguments are `5;n` or `2;r;g;b`, see below                       ║
+# 39       ║  Default foreground color      ║  implementation defined (according to standard)                         ║
+# 40–47    ║  Set background color          ║  See color table below                                                  ║
+# 48       ║  Set background color          ║  Next arguments are `5;n` or `2;r;g;b`, see below                       ║
+# 49       ║  Default background color      ║  implementation defined (according to standard)                         ║
+# 51       ║  Framed                        ║                                                                         ║
+# 52       ║  Encircled                     ║                                                                         ║
+# 53       ║  Overlined                     ║                                                                         ║
+# 54       ║  Not framed or encircled       ║                                                                         ║
+# 55       ║  Not overlined                 ║                                                                         ║
+# 60       ║  ideogram underline            ║  hardly ever supported                                                  ║
+# 61       ║  ideogram double underline     ║  hardly ever supported                                                  ║
+# 62       ║  ideogram overline             ║  hardly ever supported                                                  ║
+# 63       ║  ideogram double overline      ║  hardly ever supported                                                  ║
+# 64       ║  ideogram stress marking       ║  hardly ever supported                                                  ║
+# 65       ║  ideogram attributes off       ║  reset the effects of all of 60-64                                      ║
+# 90–97    ║  Set bright foreground color   ║  aixterm (not in standard)                                              ║
+# 100–107  ║  Set bright background color   ║  aixterm (not in standard)                                              ║
+# ═════════╩════════════════════════════════╩═════════════════════════════════════════════════════════════════════════╝
 
+import argparse
 import sys
-
 
 MAP = {
     0: "reset",
@@ -93,10 +109,7 @@ MAP = {
     35: "color fg magenta",
     36: "color fg cyan",
     37: "color fg white",
-    38: {
-        2: "color fg rgb",
-        5: "color fg 256"
-    },
+    38: {2: "color fg rgb", 5: "color fg 256"},
     39: "color fg default",
     40: "color bg black",
     41: "color bg red",
@@ -106,10 +119,7 @@ MAP = {
     45: "color bg magenta",
     46: "color bg cyan",
     47: "color bg white",
-    48: {
-        2: "color bg rgb",
-        5: "color bg 256"
-    },
+    48: {2: "color bg rgb", 5: "color bg 256"},
     49: "color bg default",
     # 50,
     51: "font framed",
@@ -403,14 +413,14 @@ def split_sequence(char_list):
         ansi = MAP[codes[c]]
 
         while isinstance(ansi, dict):
-            ansi = ansi[codes[c+1]]
+            ansi = ansi[codes[c + 1]]
             c += 1
 
         if ansi in ("color fg 256", "color bg 256"):
-            value = codes[c+1]
+            value = codes[c + 1]
             c += 1
         elif ansi in ("color fg rgb", "color bg rgb"):
-            value = (codes[c+1], codes[c+2], codes[c+3])
+            value = (codes[c + 1], codes[c + 2], codes[c + 3])
             c += 3
         else:
             value = None
@@ -430,7 +440,7 @@ def yield_sequences(text):
 
     pos = 0
     while pos < len(text):
-        if ord(text[pos]) == 27 and text[pos+1] == "[":
+        if ord(text[pos]) == 27 and text[pos + 1] == "[":
             if cur_text:
                 yield {"type": "text", "value": "".join(cur_text)}
                 cur_text = []
@@ -450,7 +460,7 @@ def yield_sequences(text):
 
 
 def rgb_to_hex(rgb):
-    return '#%02x%02x%02x' % rgb
+    return "#%02x%02x%02x" % rgb
 
 
 def to_conky(sequences):
@@ -492,10 +502,26 @@ def seq_to_conky(seq):
             return "${color %s}" % MAP_256_COLOR[seq["value"]]
 
 
-if __name__ == "__main__":
-    text = sys.stdin.read()
+def get_parser():
+    parser = argparse.ArgumentParser(prog="ansito")
+    parser.add_argument("filename", metavar="FILENAME", help="File to translate, or - for stdin.")
+    return parser
+
+
+def main(args=None):
+    """The main function, which is executed when you type ``ansito`` or ``python -m ansito``."""
+    parser = get_parser()
+    args = parser.parse_args(args=args)
+    if args.filename == "-":
+        text = sys.stdin.read()
+    else:
+        try:
+            with open(args.filename) as stream:
+                text = stream.read()
+        except FileNotFoundError as e:
+            print(e, file=sys.stderr)
 
     for s in to_conky(yield_sequences(text)):
         print(s, end="")
 
-    sys.exit(0)
+    return 0
