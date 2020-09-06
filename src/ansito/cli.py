@@ -1,20 +1,15 @@
-# coding=utf-8
-"""
-Module that contains the command line application.
+# Why does this file exist, and why not put this in `__main__`?
+#
+# You might be tempted to import things from `__main__` later,
+# but that will cause problems: the code will get executed twice:
+#
+# - When you run `python -m ansito` python will execute
+#   `__main__.py` as a script. That means there won't be any
+#   `ansito.__main__` in `sys.modules`.
+# - When you import `__main__` it will get executed again (as a module) because
+#   there's no `ansito.__main__` in `sys.modules`.
 
-Why does this file exist, and why not put this in __main__?
-
-You might be tempted to import things from __main__ later,
-but that will cause problems: the code will get executed twice:
-
-- When you run `python -m ansito` python will execute
-  ``__main__.py`` as a script. That means there won't be any
-  ``ansito.__main__`` in ``sys.modules``.
-- When you import __main__ it will get executed again (as a module) because
-  there's no ``ansito.__main__`` in ``sys.modules``.
-
-Also see http://click.pocoo.org/5/setuptools/#setuptools-integration.
-"""
+"""Module that contains the command line application."""
 
 # https://unix.stackexchange.com/questions/230613/how-can-i-display-Ansi-color-in-a-cli-conky-display#230706
 # http://wiki.bash-hackers.org/scripting/terminalcodes
@@ -69,6 +64,7 @@ Also see http://click.pocoo.org/5/setuptools/#setuptools-integration.
 
 import argparse
 import sys
+from typing import List, Optional
 
 MAP = {
     0: "reset",
@@ -502,14 +498,30 @@ def seq_to_conky(seq):
             return "${color %s}" % MAP_256_COLOR[seq["value"]]
 
 
-def get_parser():
+def get_parser() -> argparse.ArgumentParser:
+    """
+    Return the CLI argument parser.
+
+    Returns:
+        An argparse parser.
+    """
     parser = argparse.ArgumentParser(prog="ansito")
     parser.add_argument("filename", metavar="FILENAME", help="File to translate, or - for stdin.")
     return parser
 
 
-def main(args=None):
-    """The main function, which is executed when you type ``ansito`` or ``python -m ansito``."""
+def main(args: Optional[List[str]] = None) -> int:
+    """
+    Run the main program.
+
+    This function is executed when you type `ansito` or `python -m ansito`.
+
+    Arguments:
+        args: Arguments passed from the command line.
+
+    Returns:
+        An exit code.
+    """
     parser = get_parser()
     args = parser.parse_args(args=args)
     if args.filename == "-":
