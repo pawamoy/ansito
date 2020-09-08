@@ -1,5 +1,7 @@
 """Tests for the `cli` module."""
 
+import io
+
 import pytest
 
 from ansito import cli
@@ -7,7 +9,8 @@ from ansito import cli
 
 def test_main():
     """Basic CLI test."""
-    assert cli.main([]) == 0
+    with pytest.raises(SystemExit):
+        cli.main([])
 
 
 def test_show_help(capsys):
