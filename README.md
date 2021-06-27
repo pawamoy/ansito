@@ -70,3 +70,8 @@ Real-word example with `taskwarrior` in a Conky configuration file:
 ```lua
 ${texecpi 60 flock ~/.task task limit:10 rc.defaultwidth:80 rc._forcecolor:on rc.verbose:affected,blank list | ansito - | sed -r 's/([^ ])#/\1\\#/g'
 ```
+
+:warning: **Conky does not have "background colors" for text,
+so ansito will not be able to convert the ANSI codes for background colors
+to Conky colors!**
+
