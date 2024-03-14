@@ -1,3 +1,5 @@
+"""Module that contains the command line application."""
+
 # Why does this file exist, and why not put this in `__main__`?
 #
 # You might be tempted to import things from `__main__` later,
@@ -9,14 +11,12 @@
 # - When you import `__main__` it will get executed again (as a module) because
 #   there's no `ansito.__main__` in `sys.modules`.
 
-"""Module that contains the command line application."""
+from __future__ import annotations
 
 # https://unix.stackexchange.com/questions/230613/how-can-i-display-Ansi-color-in-a-cli-conky-display#230706
 # http://wiki.bash-hackers.org/scripting/terminalcodes
 # https://github.com/F1LT3R/parse-Ansi/blob/master/Ansi-seqs-to-Ansi-tags.js
-
 # https://www.wikiwand.com/en/Ansi_escape_code#/Colors
-
 # ═════════╦════════════════════════════════╦═════════════════════════════════════════════════════════════════════════╗
 #  Code    ║             Effect             ║                                   Note                                  ║
 # ═════════╬════════════════════════════════╬═════════════════════════════════════════════════════════════════════════╣
@@ -61,10 +61,11 @@
 # 90–97    ║  Set bright foreground color   ║  aixterm (not in standard)                                              ║
 # 100–107  ║  Set bright background color   ║  aixterm (not in standard)                                              ║
 # ═════════╩════════════════════════════════╩═════════════════════════════════════════════════════════════════════════╝
-
 import argparse
 import sys
-from typing import List, Optional
+from typing import Any
+
+from ansito import debug
 
 MAP = {
     0: "reset",
@@ -445,8 +446,7 @@ def yield_sequences(text):
             while text[pos] != "m":
                 char_list.append(text[pos])
                 pos += 1
-            for seq in split_sequence(char_list):
-                yield seq
+            yield from split_sequence(char_list)
         else:
             cur_text.append(text[pos])
         pos += 1
@@ -455,8 +455,8 @@ def yield_sequences(text):
         yield {"type": "text", "value": "".join(cur_text)}
 
 
-def rgb_to_hex(rgb):
-    return "#%02x%02x%02x" % rgb
+def rgb_to_hex(rgb) -> str:
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
 def to_conky(sequences):
@@ -496,44 +496,53 @@ def seq_to_conky(seq):
             return seq_to_conky({"type": MAP[seq["value"] + 82]})
         else:
             return "${color %s}" % MAP_256_COLOR[seq["value"]]
+    return None
+
+
+class _DebugInfo(argparse.Action):
+    def __init__(self, nargs: int | str | None = 0, **kwargs: Any) -> None:
+        super().__init__(nargs=nargs, **kwargs)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
+        debug.print_debug_info()
+        sys.exit(0)
 
 
 def get_parser() -> argparse.ArgumentParser:
-    """
-    Return the CLI argument parser.
+    """Return the CLI argument parser.
 
     Returns:
         An argparse parser.
     """
     parser = argparse.ArgumentParser(prog="ansito")
+    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {debug.get_version()}")
+    parser.add_argument("--debug-info", action=_DebugInfo, help="Print debug information.")
     parser.add_argument("filename", metavar="FILENAME", help="File to translate, or - for stdin.")
     return parser
 
 
-def main(args: Optional[List[str]] = None) -> int:
-    """
-    Run the main program.
+def main(args: list[str] | None = None) -> int:
+    """Run the main program.
 
     This function is executed when you type `ansito` or `python -m ansito`.
 
-    Arguments:
+    Parameters:
         args: Arguments passed from the command line.
 
     Returns:
         An exit code.
     """
     parser = get_parser()
-    args = parser.parse_args(args=args)
-    if args.filename == "-":
+    opts = parser.parse_args(args=args)
+    if opts.filename == "-":
         text = sys.stdin.read()
     else:
         try:
-            with open(args.filename) as stream:
+            with open(opts.filename) as stream:
                 text = stream.read()
         except FileNotFoundError as e:
             print(e, file=sys.stderr)
 
     for s in to_conky(yield_sequences(text)):
         print(s, end="")
-
     return 0

@@ -1,37 +1,27 @@
-.DEFAULT_GOAL := help
-SHELL := bash
+# If you have `direnv` loaded in your shell, and allow it in the repository,
+# the `make` command will point at the `scripts/make` shell script.
+# This Makefile is just here to allow auto-completion in the terminal.
 
-INVOKE_OR_POETRY = $(shell ! command -v invoke &>/dev/null && echo poetry run) invoke
-INVOKE_AND_POETRY = $(shell [ ! -n "${VIRTUAL_ENV}" ] && echo poetry run) invoke
-
-POETRY_TASKS = \
+actions = \
 	changelog \
 	check \
-	check-code-quality \
+	check-api \
 	check-dependencies \
 	check-docs \
+	check-quality \
 	check-types \
-	combine \
+	clean \
 	coverage \
 	docs \
 	docs-deploy \
-	docs-regen \
-	docs-serve \
 	format \
+	help \
 	release \
-	test
+	run \
+	setup \
+	test \
+	vscode
 
-INVOKE_TASKS = \
-	clean \
-	setup
-
-
-.PHONY: help
-help:
-	@$(INVOKE) --list
-
-$(POETRY_TASKS):
-	@$(INVOKE_AND_POETRY) $@ $(args)
-
-$(INVOKE_TASKS):
-	@$(INVOKE_OR_POETRY) $@ $(args)
+.PHONY: $(actions)
+$(actions):
+	@bash scripts/make "$@"
