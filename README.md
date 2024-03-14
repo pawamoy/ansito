@@ -10,6 +10,10 @@ Translate ANSI codes to any other format.
 
 Currently, only Conky format is supported.
 
+**:warning: This project is unmaintained.
+Drop me a message if you would like me to transfer it to you
+or add you as a collaborator.**
+
 ## Installation
 
 With `pip`:
