@@ -31,7 +31,7 @@ from __future__ import annotations
 # 8        ║  Conceal                       ║  Not widely supported.                                                  ║
 # 9        ║  Crossed-out                   ║  Characters legible, but marked for deletion.  Not widely supported.    ║
 # 10       ║  Primary(default) font         ║                                                                         ║
-# 11–19    ║  Alternate font                ║  Select alternate font `n-10`                                           ║
+# 11-19    ║  Alternate font                ║  Select alternate font `n-10`                                           ║
 # 20       ║  Fraktur                       ║  hardly ever supported                                                  ║
 # 21       ║  Bold off or Double Underline  ║  Bold off not widely supported; double underline hardly ever supported. ║
 # 22       ║  Normal color or intensity     ║  Neither bold nor faint                                                 ║
@@ -41,10 +41,10 @@ from __future__ import annotations
 # 27       ║  Inverse off                   ║                                                                         ║
 # 28       ║  Reveal                        ║  conceal off                                                            ║
 # 29       ║  Not crossed out               ║                                                                         ║
-# 30–37    ║  Set foreground color          ║  See color table below                                                  ║
+# 30-37    ║  Set foreground color          ║  See color table below                                                  ║
 # 38       ║  Set foreground color          ║  Next arguments are `5;n` or `2;r;g;b`, see below                       ║
 # 39       ║  Default foreground color      ║  implementation defined (according to standard)                         ║
-# 40–47    ║  Set background color          ║  See color table below                                                  ║
+# 40-47    ║  Set background color          ║  See color table below                                                  ║
 # 48       ║  Set background color          ║  Next arguments are `5;n` or `2;r;g;b`, see below                       ║
 # 49       ║  Default background color      ║  implementation defined (according to standard)                         ║
 # 51       ║  Framed                        ║                                                                         ║
@@ -58,16 +58,16 @@ from __future__ import annotations
 # 63       ║  ideogram double overline      ║  hardly ever supported                                                  ║
 # 64       ║  ideogram stress marking       ║  hardly ever supported                                                  ║
 # 65       ║  ideogram attributes off       ║  reset the effects of all of 60-64                                      ║
-# 90–97    ║  Set bright foreground color   ║  aixterm (not in standard)                                              ║
-# 100–107  ║  Set bright background color   ║  aixterm (not in standard)                                              ║
+# 90-97    ║  Set bright foreground color   ║  aixterm (not in standard)                                              ║
+# 100-107  ║  Set bright background color   ║  aixterm (not in standard)                                              ║
 # ═════════╩════════════════════════════════╩═════════════════════════════════════════════════════════════════════════╝
 import argparse
 import sys
-from typing import Any
+from typing import Any, Dict, Iterable, Iterator, Tuple, Union
 
 from ansito import debug
 
-MAP = {
+MAP: dict[int, str | dict[int, str]] = {
     0: "reset",
     1: "font bold",
     2: "font faint",
@@ -153,7 +153,7 @@ MAP = {
 
 # Could be used instead:
 # https://github.com/selectel/pyte/blob/master/pyte/graphics.py
-MAP_256_COLOR = {
+MAP_256_COLOR: dict[int, str] = {
     16: "#000000",
     17: "#00005f",
     18: "#000087",
@@ -397,7 +397,10 @@ MAP_256_COLOR = {
 }
 
 
-def split_sequence(char_list):
+SequenceType = Dict[str, Union[str, int, Tuple[int, int, int]]]
+
+
+def _split_sequence(char_list: list[str]) -> list[SequenceType]:
     codes = [int(n) for n in "".join(char_list).split(";") if n.isdigit()]
 
     if not codes:
@@ -414,15 +417,15 @@ def split_sequence(char_list):
             c += 1
 
         if ansi in ("color fg 256", "color bg 256"):
-            value = codes[c + 1]
+            value: int | tuple[int, int, int] = codes[c + 1]
             c += 1
         elif ansi in ("color fg rgb", "color bg rgb"):
             value = (codes[c + 1], codes[c + 2], codes[c + 3])
             c += 3
         else:
-            value = None
+            value = None  # type: ignore[assignment]
 
-        seq = {"type": ansi}
+        seq: SequenceType = {"type": ansi}
         if value is not None:
             seq["value"] = value
 
@@ -432,12 +435,12 @@ def split_sequence(char_list):
     return seqs
 
 
-def yield_sequences(text):
-    cur_text = []
+def _yield_sequences(text: str) -> Iterator[SequenceType]:
+    cur_text: list[str] = []
 
     pos = 0
     while pos < len(text):
-        if ord(text[pos]) == 27 and text[pos + 1] == "[":
+        if ord(text[pos]) == 27 and text[pos + 1] == "[":  # noqa: PLR2004
             if cur_text:
                 yield {"type": "text", "value": "".join(cur_text)}
                 cur_text = []
@@ -446,7 +449,7 @@ def yield_sequences(text):
             while text[pos] != "m":
                 char_list.append(text[pos])
                 pos += 1
-            yield from split_sequence(char_list)
+            yield from _split_sequence(char_list)
         else:
             cur_text.append(text[pos])
         pos += 1
@@ -455,47 +458,46 @@ def yield_sequences(text):
         yield {"type": "text", "value": "".join(cur_text)}
 
 
-def rgb_to_hex(rgb) -> str:
+def _rgb_to_hex(rgb: tuple[int, int, int]) -> str:
     return "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
-def to_conky(sequences):
+def _to_conky(sequences: Iterable[SequenceType]) -> Iterator[str | int]:
     for seq in sequences:
-        c = seq_to_conky(seq)
+        c = _seq_to_conky(seq)
         if c is not None:
-            yield seq_to_conky(seq)
+            yield c
 
 
-def seq_to_conky(seq):
+def _seq_to_conky(seq: SequenceType) -> str | int | None:
     if seq["type"] == "text":
-        return seq["value"]
-    elif seq["type"] == "reset":
+        return seq["value"]  # type: ignore[return-value]
+    if seq["type"] == "reset":
         return "${color}"
-    elif seq["type"] == "color fg black":
+    if seq["type"] == "color fg black":
         return "${color black}"
-    elif seq["type"] == "color fg red":
+    if seq["type"] == "color fg red":
         return "${color red}"
-    elif seq["type"] == "color fg green":
+    if seq["type"] == "color fg green":
         return "${color green}"
-    elif seq["type"] == "color fg yellow":
+    if seq["type"] == "color fg yellow":
         return "${color yellow}"
-    elif seq["type"] == "color fg blue":
+    if seq["type"] == "color fg blue":
         return "${color blue}"
-    elif seq["type"] == "color fg magenta":
+    if seq["type"] == "color fg magenta":
         return "${color magenta}"
-    elif seq["type"] == "color fg cyan":
+    if seq["type"] == "color fg cyan":
         return "${color cyan}"
-    elif seq["type"] == "color fg white":
+    if seq["type"] == "color fg white":
         return "${color white}"
-    elif seq["type"] == "color fg rgb":
-        return "${color %s}" % rgb_to_hex(seq["value"])
-    elif seq["type"] == "color fg 256":
-        if 0 <= seq["value"] <= 7:
-            return seq_to_conky({"type": MAP[seq["value"] + 30]})
-        elif 8 <= seq["value"] <= 15:
-            return seq_to_conky({"type": MAP[seq["value"] + 82]})
-        else:
-            return "${color %s}" % MAP_256_COLOR[seq["value"]]
+    if seq["type"] == "color fg rgb":
+        return "${color %s}" % _rgb_to_hex(seq["value"])  # type: ignore[arg-type]
+    if seq["type"] == "color fg 256":
+        if 0 <= seq["value"] <= 7:  # type: ignore[operator]  # noqa: PLR2004
+            return _seq_to_conky({"type": MAP[seq["value"] + 30]})  # type: ignore[dict-item,operator]
+        if 8 <= seq["value"] <= 15:  # type: ignore[operator]  # noqa: PLR2004
+            return _seq_to_conky({"type": MAP[seq["value"] + 82]})  # type: ignore[dict-item,operator]
+        return "${color %s}" % MAP_256_COLOR[seq["value"]]  # type: ignore[index]
     return None
 
 
@@ -543,6 +545,6 @@ def main(args: list[str] | None = None) -> int:
         except FileNotFoundError as e:
             print(e, file=sys.stderr)
 
-    for s in to_conky(yield_sequences(text)):
+    for s in _to_conky(_yield_sequences(text)):
         print(s, end="")
     return 0
